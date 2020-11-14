@@ -1,0 +1,66 @@
+#:import CircularProgressBar circular_progress_bar 
+#:import Label kivy.core.text.Label 
+#:set _label Label(text="Charge...\n{}%", color=(0,0,0,1), halign="center")
+
+<MotorController>:
+    canvas:
+        Color: 
+            rgb: 0,0,1
+        Rectangle:
+            size: root.size
+            pos: root.pos
+            
+    SpeedMeter:
+        id: power_guage
+        min: speed_value.min
+        max: speed_value.max
+        tick: 20
+        start_angle: -120
+        end_angle: 120
+        subtick: 5
+        display_first: True
+        display_last: True
+        label: 'Power'
+        value: speed_value.value
+        cadran_color: '#0f0f0f'
+        needle_color: '#000000'
+        sectors: (self.min, '#0000ff', self.max/2, '#ffff00', self.max-40,'#ff0000')
+        sector_width: 5
+        pos_hint: {"top": 0.95}
+        size_hint: 1.0, 0.5
+
+    Button:
+        id: power_button
+        text: "OFF"
+        background_normal: "power_on.png"
+        backgroup_down: "power_on.png"
+        size_hint: 0.3, 0.4
+        pos_hint: {"right": 1}
+
+    CircularProgressBar:
+        canvas:
+            Color: 
+                rgb: 1,0,1
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        id: battery
+        max: 100
+        min: 0
+        thickness: 15
+        value: 100
+        cap_style: "SqUArE"
+        progress_colour: (0, 1, 0, 1)
+        background_colour: (1, 0, 0, 1)
+        cap_precision: 3
+        pos_hint: {"right": 1}
+        label: _label
+
+    MDSlider:
+        id: speed_value
+        min: 0
+        max: 240
+        value: 0
+        size_hint_x: 1 
+        on_value: app.set_speed()
