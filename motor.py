@@ -3,6 +3,9 @@ from kivy.uix.gridlayout import GridLayout
 from speedmeter import SpeedMeter
 from kivy.uix.floatlayout import FloatLayout
 from kivy.clock import Clock
+from kivy.animation import Animation
+from kivy.properties import NumericProperty
+
 import sys
 
 if sys.platform.startswith('linux'):
@@ -108,9 +111,15 @@ class MotorController(FloatLayout):
 
 
 class motor_controller(App):
+    angle = NumericProperty(360)
+
     def __init__(self, motor, **kwargs):
         super(motor_controller, self).__init__(**kwargs)
         self.motor = motor
+        anim = Animation(angle=0, duration=2)
+        anim += Animation(angle=0, duration=2)
+        anim.repeat = True
+        anim.start(self)
 
     def build(self):
         return MotorController()
@@ -131,11 +140,23 @@ class motor_controller(App):
         self.motor.forward = not self.motor.forward
         print(self.motor.forward)
         if self.motor.forward:
-            direction.background_down = "reverse.jpeg"
-            direction.background_normal: "forward.jpeg"
+            direction.background_down = "reverse.png"
+            direction.background_normal = "forward.png"
+            angle = 360
         else:
-            direction.background_down = "forward.jpeg"
-            direction.background_normal: "reverse.jpeg"
+            direction.background_down = "forward.png"
+            direction.background_normal = "reverse.png"
+            angle = 360
+
+    def on_angle(self, item, angle):
+        direction = self.root.ids.direction
+
+        if direction:
+            if angle == 0:
+                item.angle = 360
+        else:
+            if angle == 360:
+                item.angle = 0
 
 
 # run the app

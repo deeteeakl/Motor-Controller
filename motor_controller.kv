@@ -65,8 +65,16 @@
 
     Button:
         id: direction
-        background_down: "reverse.jpeg"
-        background_normal: "forward.jpeg"
+        background_down: "reverse.png"
+        background_normal: "forward.png"
         size_hint: 0.3, 0.4
         pos_hint: {"center_x":0.7, "center_y":0.2}
         on_release: app.change_direction()
+        canvas.before:
+            PushMatrix
+            Rotate:
+                angle: app.angle
+                axis: 0,0,1
+                origin: self.center
+        canvas.after:
+            PopMatrix
