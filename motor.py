@@ -26,8 +26,9 @@ class Motor():
             GPIO.setup(_ENABLEPIN, GPIO.OUT)
             # creat PWM and set Frequency to 1KHz        self.__on = False
             self.__p = GPIO.PWM(_ENABLEPIN, 1000)
-        self.speed = speed
         self.__on = False
+        self.speed = speed
+        self.forward = True
         #print("motor instantiated")
 
     def __repr__(self):
@@ -124,6 +125,17 @@ class motor_controller(App):
         speed_value.disabled = not value
 
         # print(self.motor.power)
+
+    def change_direction(self):
+        direction = self.root.ids.direction
+        self.motor.forward = not self.motor.forward
+        print(self.motor.forward)
+        if self.motor.forward:
+            direction.background_down = "reverse.jpeg"
+            direction.background_normal: "forward.jpeg"
+        else:
+            direction.background_down = "forward.jpeg"
+            direction.background_normal: "reverse.jpeg"
 
 
 # run the app
