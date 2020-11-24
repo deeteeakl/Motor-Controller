@@ -116,10 +116,9 @@ class motor_controller(App):
     def __init__(self, motor, **kwargs):
         super(motor_controller, self).__init__(**kwargs)
         self.motor = motor
-        anim = Animation(angle=0, duration=2)
-        anim += Animation(angle=0, duration=2)
-        anim.repeat = True
-        anim.start(self)
+        self.anim = Animation(angle=0, duration=2)
+        self.anim += Animation(angle=0, duration=2)
+        self.anim.repeat = True
 
     def build(self):
         return MotorController()
@@ -132,31 +131,26 @@ class motor_controller(App):
         speed_value = self.root.ids.speed_value
         self.motor.power = value
         speed_value.disabled = not value
-
-        # print(self.motor.power)
+        if value:
+            self.anim.start(self)
+        else:
+            self.anim.cancel(self)
 
     def change_direction(self):
         direction = self.root.ids.direction
         self.motor.forward = not self.motor.forward
-        print(self.motor.forward)
         if self.motor.forward:
             direction.background_down = "reverse.png"
             direction.background_normal = "forward.png"
-            angle = 360
+
         else:
             direction.background_down = "forward.png"
             direction.background_normal = "reverse.png"
-            angle = 360
 
     def on_angle(self, item, angle):
-        direction = self.root.ids.direction
 
-        if direction:
-            if angle == 0:
-                item.angle = 360
-        else:
-            if angle == 360:
-                item.angle = 0
+        if angle == 0:
+            item.angle = 360 if self.motor.forward else -360
 
 
 # run the app
