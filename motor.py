@@ -20,19 +20,22 @@ _MAXSPEED = 100
 
 
 class Motor():
-    def __init__(self, speed=0):
+    def __init__(self):
         if sys.platform.startswith('linux'):
+            print("on linux -- prob should check for gpio")
             GPIO.cleanup()
             GPIO.setmode(GPIO.BOARD)
-            GPIO.setup(_MOTORPIN1, GPIO.OUT)   # set pins to OUTPUT mode
+            GPIO.setup(_MOTORPIN1, GPIO.OUT)
             GPIO.setup(_MOTORPIN2, GPIO.OUT)
             GPIO.setup(_ENABLEPIN, GPIO.OUT)
-            # creat PWM and set Frequency to 1KHz        self.__on = False
             self.__p = GPIO.PWM(_ENABLEPIN, 1000)
+            # initialise to stop
+            GPIO.output(_MOTORPIN1, GPIO.LOW)
+            GPIO.output(_MOTORPIN2, GPIO.LOW)
         self.__on = False
-        self.speed = speed
-        self.forward = True
-        #print("motor instantiated")
+        self.__speed = 0
+        self.__forward = True
+        print("motor instantiated")
 
     def __repr__(self):
         return "Motor %s, speed %s" % (self.power, self.speed)
@@ -45,34 +48,58 @@ class Motor():
             return "Off"
 
     @power.setter
-    def power(self, x):
-        self.__on = x
-        if not self.__on:
+    def power(self, pwer):
+        self.__on = pwer
+        if self.__on:
+            if self.__forward:
+                GPIO.output(_MOTORPIN1, GPIO.LOW)
+                GPIO.output(_MOTORPIN2, GPIO.HIGH)
+                print("power up - forward")
+            else:
+                GPIO.output(_MOTORPIN1, GPIO.HIGH)
+                GPIO.output(_MOTORPIN2, GPIO.LOW)
+                print("power up - reverse")
+        else:
             self.__speed = 0
+            print("powered down")
 
     @property
     def speed(self):
         return self.__speed
+    
+    @property
+    def forward(self):
+        return self.__forward
+        
+    def change_dir(self):
+        # Flip direction
+        self.__forward = not self.__forward
+        print("change direction forward = ",self.__forward)
 
-    @speed.setter
-    def speed(self, x):
-        if x > _MAXSPEED:
-            x = _MAXSPEED
-        self.__speed = x
         if sys.platform.startswith('linux'):
-            if self.__on:
-                # motoRPin1 output HIHG level
+            if self.__forward:
+                print('Turn Forwards...%s' % (self.speed))
                 GPIO.output(_MOTORPIN1, GPIO.HIGH)
-                # motoRPin2 output LOW level
                 GPIO.output(_MOTORPIN2, GPIO.LOW)
-                if self.speed > 0:
-                    print('Turn Forward...%s' % (self.speed))
-                    self.__p.start(self.speed)
+            else:
+                print('Turn Backwards...%s' % (self.speed))
+                GPIO.output(_MOTORPIN1, GPIO.LOW)
+                GPIO.output(_MOTORPIN2, GPIO.HIGH)
+    
+    @speed.setter
+    def speed(self, spd):
+        if spd > _MAXSPEED:
+            spd = _MAXSPEED
+        self.__speed = spd
+        if sys.platform.startswith('linux'):
+            if self.__on and self.__speed > 0:
+                self.__p.start(self.__speed)
+                print("Speed set to ",self.__speed)
             else:
                 GPIO.output(_MOTORPIN1, GPIO.LOW)
                 GPIO.output(_MOTORPIN2, GPIO.LOW)
                 print('Motor Stop...')
-
+        
 
 class MotorController(FloatLayout):
     def __init__(self, **kwargs):
@@ -112,6 +139,7 @@ class MotorController(FloatLayout):
 
 class motor_controller(App):
     angle = NumericProperty(360)
+    max_speed = NumericProperty(_MAXSPEED)
 
     def __init__(self, motor, **kwargs):
         super(motor_controller, self).__init__(**kwargs)
@@ -138,7 +166,7 @@ class motor_controller(App):
 
     def change_direction(self):
         direction = self.root.ids.direction
-        self.motor.forward = not self.motor.forward
+        self.motor.change_dir()
         if self.motor.forward:
             direction.background_down = "reverse.png"
             direction.background_normal = "forward.png"
